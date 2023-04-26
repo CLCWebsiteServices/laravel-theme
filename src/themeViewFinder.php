@@ -7,6 +7,9 @@ use Illuminate\View\FileViewFinder;
 
 class themeViewFinder extends FileViewFinder
 {
+    
+    public $themeEngine;
+    
     public function __construct(Filesystem $files, array $paths, array $extensions = null)
     {
         $this->themeEngine = \App::make('igaster.themes');
