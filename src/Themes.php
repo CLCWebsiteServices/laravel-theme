@@ -1,5 +1,7 @@
 <?php namespace Igaster\LaravelTheme;
 
+use Igaster\LaravelTheme\Events\ThemeChanged;
+use Igaster\LaravelTheme\Exceptions\themeNotFound;
 use Illuminate\Support\Facades\Event;
 
 class Themes
@@ -58,8 +60,9 @@ class Themes
      * Enable $themeName & set view paths
      *
      * @return Theme
+     * @throws themeNotFound
      */
-    public function set($themeName)
+    public function set($themeName): Theme
     {
         if ($this->exists($themeName)) {
             $theme = $this->find($themeName);
@@ -83,7 +86,7 @@ class Themes
 
         $themeViewFinder = app('view.finder');
         $themeViewFinder->setPaths($paths);
-        Event::dispatch('igaster.laravel-theme.change', $theme);
+        Event::dispatch(new ThemeChanged($theme));
         return $theme;
     }
 
@@ -94,7 +97,7 @@ class Themes
      */
     public function current()
     {
-        return $this->activeTheme ? $this->activeTheme : null;
+        return $this->activeTheme ?: null;
     }
 
     /**
@@ -108,9 +111,10 @@ class Themes
     }
 
     /**
-     * Find a theme by it's name
+     * Find a theme by its name
      *
      * @return Theme
+     * @throws themeNotFound
      */
     public function find($themeName)
     {
@@ -237,7 +241,7 @@ class Themes
         $themesConfig = config('themes.themes', []);
 
         foreach ($this->loadThemesJson() as $data) {
-            // Are theme settings overriden in config/themes.php?
+            // Are theme settings overridden in config/themes.php?
             if (array_key_exists($data['name'], $themesConfig)) {
                 $data = array_merge($data, $themesConfig[$data['name']]);
             }
@@ -341,7 +345,7 @@ class Themes
      * @param  string $href
      * @return string
      */
-    public function css($href)
+    public function css($href): string
     {
         return sprintf('<link media="all" type="text/css" rel="stylesheet" href="%s">', $this->url($href));
     }
@@ -352,7 +356,7 @@ class Themes
      * @param  string $href
      * @return string
      */
-    public function js($href)
+    public function js($href): string
     {
         return sprintf('<script src="%s"></script>', $this->url($href));
     }
@@ -360,13 +364,13 @@ class Themes
     /**
      * Return img tag
      *
-     * @param  string $src
-     * @param  string $alt
-     * @param  string $Class
-     * @param  array $attributes
+     * @param string $src
+     * @param string $alt
+     * @param string $class
+     * @param array $attributes
      * @return string
      */
-    public function img($src, $alt = '', $class = '', $attributes = [])
+    public function img($src, $alt = '', $class = '', $attributes = []): string
     {
         return sprintf('<img src="%s" alt="%s" class="%s" %s>',
             $this->url($src),
@@ -382,7 +386,7 @@ class Themes
      * @param  array $attributes
      * @return string
      */
-    private function HtmlAttributes($attributes)
+    private function HtmlAttributes($attributes): string
     {
         $formatted = join(' ', array_map(function ($key) use ($attributes) {
             if (is_bool($attributes[$key])) {
